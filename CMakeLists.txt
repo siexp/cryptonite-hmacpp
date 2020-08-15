@@ -31,4 +31,4 @@ install(TARGETS hmacpp_static cryptonite DESTINATION lib)
 
 # Install library headers
 file(GLOB HEADERS ${CMAKE_SOURCE_DIR}/src/core/cpp/*.h)
-install(FILES ${HEADERS} DESTINATION include)
+install(FILES ${HEADERS} DESTINATION include/${CMAKE_PROJECT_NAME})
