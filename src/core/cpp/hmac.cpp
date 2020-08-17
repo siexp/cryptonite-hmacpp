@@ -74,6 +74,10 @@ Hmac::Hmac(HashType ht, const std::vector<uint8_t>& key) {
   this->ctx = hctx;
 }
 
+Hmac::Hmac(HashType ht, const std::vector<uint8_t>& key, const std::vector<uint8_t>& data): Hmac{ht, key} {
+  update(data);
+}
+
 Hmac::~Hmac() {
   hmac_free((HmacCtx *)this->ctx);
   stacktrace_free_current();

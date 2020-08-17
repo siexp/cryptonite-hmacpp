@@ -6,9 +6,11 @@
 
 #include "mexceptions.h"
 
-#include <string>
+#include <iomanip>
 #include <iostream>
-
+#include <iterator>
+#include <string>
+#include <vector>
 
 namespace
 {
@@ -22,6 +24,19 @@ std::vector<uint8_t> hexToBytes(const std::string hex) {
     }
 
     return bytes;
+}
+
+std::vector<uint8_t> stringToBytes(const std::string str) {
+    return std::vector<uint8_t>{str.begin(), str.end()};
+}
+
+template< class data_type >
+std::ostream& operator<<(std::ostream& output, const std::vector<data_type>& vec)
+{ 
+    output << std::hex;
+    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(output, ""));
+
+    return output;  
 }
 
 void test_md5() {
@@ -73,6 +88,38 @@ void test_hmac_sha256() {
 
     std::cout << __func__ << ": done" << std::endl;
 }
+
+void test_hmac_sha256_string_key() {
+    const std::vector<uint8_t> data{stringToBytes("Hi There")};
+    const std::vector<uint8_t> key{stringToBytes("string_key")};
+    const std::vector<uint8_t> exp = hexToBytes("ecc9b92820b8af64985aee3dfa7d9e0897a87e88cbcc0dddb60a21d29d152e38");
+
+    cryptonite::Hmac hmac{cryptonite::HashType::SHA2_256, key, data};
+    const std::vector<uint8_t> act = hmac.finale();
+
+    if (act != exp) {
+        THROW_EXCEPTION("Sha256_256. Not equal.")
+    }
+
+    std::cout << __func__ << ": done" << std::endl;
+}
+
+void test_hmac_sha256_string_key_update_data() {
+    const std::vector<uint8_t> data{stringToBytes("Hi")};
+    const std::vector<uint8_t> key{stringToBytes("string_key")};
+    const std::vector<uint8_t> exp = hexToBytes("ecc9b92820b8af64985aee3dfa7d9e0897a87e88cbcc0dddb60a21d29d152e38");
+
+    cryptonite::Hmac hmac{cryptonite::HashType::SHA2_256, key, data};
+    const std::vector<uint8_t> additionalData{stringToBytes(" There")};
+    hmac.update(additionalData);
+    const std::vector<uint8_t> act = hmac.finale();
+
+    if (act != exp) {
+        THROW_EXCEPTION("Sha256_256. Not equal.")
+    }
+
+    std::cout << __func__ << ": done" << std::endl;
+}
 }
 
 int main() {
@@ -80,6 +127,8 @@ int main() {
         test_md5();
         test_hmac_md5_2();
         test_hmac_sha256();
+        test_hmac_sha256_string_key();
+        test_hmac_sha256_string_key_update_data();
     } catch (const std::exception &e) {
         std::cout << "Exception: " << e.what() << std::endl;
     }
